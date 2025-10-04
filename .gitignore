@@ -1,0 +1,26 @@
+# Archivos de Docker
+.env
+docker-compose.override.yml
+
+# Logs de base de datos
+*.log
+
+# Archivos temporales
+*.tmp
+*.temp
+*~
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Carpetas de volúmenes de Docker
+postgres_data/
+mysql_data/
+
+# Archivos de backup
+*.sql.backup
+*.bak
+
+# Archivos de configuración local
+config.local.*

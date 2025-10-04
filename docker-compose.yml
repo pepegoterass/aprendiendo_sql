@@ -1,0 +1,80 @@
+# 🐳 Entorno de Entrenamiento SQL con Docker
+# Base de datos PostgreSQL containerizada
+
+version: '3.8'
+
+services:
+  # Base de datos PostgreSQL
+  postgres_db:
+    image: postgres:15-alpine
+    container_name: entrenosql_postgres
+    restart: always
+    environment:
+      POSTGRES_DB: empresa
+      POSTGRES_USER: sqltrainer
+      POSTGRES_PASSWORD: sqltrainer123
+      POSTGRES_INITDB_ARGS: "--encoding=UTF-8 --lc-collate=es_ES.UTF-8 --lc-ctype=es_ES.UTF-8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/init_postgres.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ./database/sample_data.sql:/docker-entrypoint-initdb.d/02_data.sql
+    networks:
+      - sql_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U sqltrainer -d empresa"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Opcional: MySQL como alternativa
+  mysql_db:
+    image: mysql:8.0
+    container_name: entrenosql_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: empresa
+      MYSQL_USER: sqltrainer
+      MYSQL_PASSWORD: sqltrainer123
+      MYSQL_ROOT_PASSWORD: rootpassword123
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_spanish_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init_mysql.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ./database/sample_data_mysql.sql:/docker-entrypoint-initdb.d/02_data.sql
+    networks:
+      - sql_network
+    command: --default-authentication-plugin=mysql_native_password
+    profiles:
+      - mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "sqltrainer", "-psqltrainer123"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Adminer - Interfaz web para administrar la base de datos
+  adminer:
+    image: adminer:4.8.1
+    container_name: entrenosql_adminer
+    restart: always
+    ports:
+      - "8080:8080"
+    networks:
+      - sql_network
+    depends_on:
+      - postgres_db
+
+volumes:
+  postgres_data:
+    driver: local
+  mysql_data:
+    driver: local
+
+networks:
+  sql_network:
+    driver: bridge
