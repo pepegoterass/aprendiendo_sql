@@ -207,13 +207,23 @@ HAVING COUNT(*) > 2;
 
 -- 4.4 Departamentos con salario promedio > 45000
 -- TU TURNO:
-
+SELECT
+    departamento_id,
+    AVG(salario) AS salario_promedio,
+    FROM empleados,
+    GROUP BY departamento_id
+    HAVING AVG(salario) >45000;
 
 
 
 -- 4.5 Ciudades con más de 1 cliente
 -- TU TURNO:
-
+SELECT 
+ciudades,
+COUNT(*) AS num_clientes
+FROM clientes
+GROUP BY ciudades
+HAVING COUNT(*) > 1;
 
 
 
@@ -223,32 +233,67 @@ HAVING COUNT(*) > 2;
 
 -- 5.1 TOP 3 departamentos con mayor masa salarial
 -- TU TURNO:
-
+SELECT 
+    departamento_id,
+    SUM(salario) AS masa_salarial
+FROM empleados
+GROUP BY departamento_id
+ORDER BY masa_salarial DESC
+LIMIT 3;
 
 
 
 -- 5.2 Productos más vendidos (por cantidad total)
 -- TU TURNO:
-
+SELECT 
+    id_producto,
+    SUM(cantidad) AS cantidad_total
+FROM ventas
+GROUP BY id_producto
+ORDER BY cantidad_total DESC
+LIMIT 3;
 
 
 
 -- 5.3 Meses con mayores ventas en 2024
 -- TU TURNO:
-
+SELECT
+    DATE_PART('month', fecha_venta) AS mes,
+    COUNT(*) AS num_ventas,
+    SUM(total_calculado) AS total_facturado,
+    AVG(total_calculado) AS ticket_promedio
+FROM ventas
+WHERE DATE_PART('year', fecha_venta) = 2024
+GROUP BY mes
+ORDER BY mes;   
 
 
 
 -- 5.4 Empleados de ventas con su total vendido (si han vendido)
 -- PISTA: Necesitarás WHERE id_departamento = 1
 -- TU TURNO:
-
+SELECT
+    e.id_empleado,
+    e.nombre,
+    e.apellido,
+    COUNT(v.id_venta) AS num_ventas,
+    SUM(v.total_calculado) AS total_vendido
+FROM empleados e
+LEFT JOIN ventas v ON e.id_empleado = v.id_empleado
+WHERE e.departamento_id = 1
+GROUP BY e.id_empleado, e.nombre, e.apellido;
 
 
 
 -- 5.5 Categorías con más de 3 productos Y precio promedio < 500
 -- TU TURNO:
-
+SELECT
+    categoria,
+    COUNT(*) AS num_productos,
+    AVG(precio) AS precio_promedio
+FROM productos
+GROUP BY categoria
+HAVING COUNT(*) > 3 AND AVG(precio) < 500;
 
 
 
@@ -261,20 +306,67 @@ HAVING COUNT(*) > 2;
 --     Ordenado por salario_total descendente
 -- TU SOLUCIÓN:
 
+-- OPCIÓN 1: JOIN con subconsulta (más compleja pero más clara)
+SELECT
+    d.nombre_departamento,
+    e.numero_empleados,
+    e.salario_promedio,
+    e.salario_total
+FROM departamentos d
+JOIN (
+    SELECT 
+        id_departamento,
+        COUNT(*) AS numero_empleados,
+        AVG(salario) AS salario_promedio,
+        SUM(salario) AS salario_total
+    FROM empleados
+    GROUP BY id_departamento
+    HAVING COUNT(*) > 1
+) e ON d.id_departamento = e.id_departamento
+ORDER BY e.salario_total DESC;
+
+-- OPCIÓN 2: JOIN directo (más simple y eficiente)
+SELECT
+    d.nombre_departamento,
+    COUNT(e.id_empleado) AS num_empleados,
+    AVG(e.salario) AS salario_promedio,
+    SUM(e.salario) AS salario_total
+FROM departamentos d
+JOIN empleados e ON d.id_departamento = e.id_departamento
+GROUP BY d.id_departamento, d.nombre_departamento
+HAVING COUNT(e.id_empleado) > 1
+ORDER BY salario_total DESC;
 
 
 
 -- E2. TOP 5 productos más vendidos (por cantidad total), mostrando:
 --     nombre_producto, categoria, cantidad_total_vendida, ingresos_totales
 -- TU SOLUCIÓN:
-
+SELECT
+    p.nombre_producto,
+    p.categoria,
+    SUM(v.cantidad) AS cantidad_total_vendida,
+    SUM(v.cantidad * p.precio) AS ingresos_totales,
+    FROM produtos p,
+    JOIN ventas v ON p.id_producto = v.id_producto
+    GROUP BY p.id_producto, p.nombre_producto, p.categoria
+    ORDER BY cantidad_total_vendida DESC;
 
 
 
 -- E3. Análisis mensual de 2024: mes, número_ventas, total_facturado
 --     Solo meses con más de 2 ventas, ordenado por total_facturado DESC
 -- TU SOLUCIÓN:
-
+SELECT
+    DATE_PART('month', fecha_venta) AS mes,
+    COUNT(*) AS num_ventas,
+    SUM(total_calculado) AS total_facturado,
+    AVG(total_calculado) AS ticket_promedio
+FROM ventas
+WHERE DATE_PART('year', fecha_venta) = 2024
+GROUP BY mes
+HAVING COUNT(*) > 2
+ORDER BY total_facturado DESC;
 
 
 
