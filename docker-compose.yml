@@ -36,7 +36,7 @@ services:
     environment:
       MYSQL_DATABASE: empresa
       MYSQL_USER: sqltrainer
-      MYSQL_PASSWORD: sqltrainer123
+      MYSQL_PASSWORD: 
       MYSQL_ROOT_PASSWORD: rootpassword123
       MYSQL_CHARACTER_SET_SERVER: utf8mb4
       MYSQL_COLLATION_SERVER: utf8mb4_spanish_ci
